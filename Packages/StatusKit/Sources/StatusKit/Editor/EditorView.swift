@@ -53,7 +53,6 @@ extension StatusEditor {
 
           Divider()
         }
-        .opacity(editorFocusState == assignedFocusState ? 1 : 0.6)
       }
       #if !os(visionOS)
       .background(theme.primaryBackgroundColor)
@@ -132,6 +131,7 @@ extension StatusEditor {
                                        routerPath: RouterPath(),
                                        showActions: false))
           .accessibilityLabel(status.content.asRawText)
+          .environment(RouterPath())
           .allowsHitTesting(false)
           .environment(\.isStatusFocused, false)
           .padding(.horizontal, .layoutPadding)
@@ -157,39 +157,39 @@ extension StatusEditor {
     private var characterCountAndLangView: some View {
       let value = (currentInstance.instance?.configuration?.statuses.maxCharacters ?? 500) + viewModel.statusTextCharacterLength
       HStack(alignment: .center) {
-        LangButton(viewModel: viewModel)
-          .padding(.leading, .layoutPadding)
-        
-        Button {
-          withAnimation {
-            viewModel.showPoll.toggle()
-            viewModel.resetPollDefaults()
+        if editorFocusState == assignedFocusState {
+          LangButton(viewModel: viewModel)
+            .padding(.leading, .layoutPadding)
+          
+          Button {
+            withAnimation {
+              viewModel.showPoll.toggle()
+              viewModel.resetPollDefaults()
+            }
+          } label: {
+            Image(systemName: viewModel.showPoll ? "chart.bar.fill" : "chart.bar")
           }
-        } label: {
-          Image(systemName: viewModel.showPoll ? "chart.bar.fill" : "chart.bar")
-        }
-        .buttonStyle(.bordered)
-        .accessibilityLabel("accessibility.editor.button.poll")
-        .disabled(viewModel.shouldDisablePollButton)
+          .buttonStyle(.bordered)
+          .accessibilityLabel("accessibility.editor.button.poll")
+          .disabled(viewModel.shouldDisablePollButton)
 
-        Button {
-          withAnimation {
-            viewModel.spoilerOn.toggle()
+          Button {
+            withAnimation {
+              viewModel.spoilerOn.toggle()
+            }
+            isSpoilerTextFocused = viewModel.id
+          } label: {
+            Image(systemName: viewModel.spoilerOn ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
           }
-          isSpoilerTextFocused = viewModel.id
-        } label: {
-          Image(systemName: viewModel.spoilerOn ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
+          .buttonStyle(.bordered)
+          .accessibilityLabel("accessibility.editor.button.spoiler")
         }
-        .buttonStyle(.bordered)
-        .accessibilityLabel("accessibility.editor.button.spoiler")
         
         Spacer()
         
         Text("\(value)")
           .foregroundColor(value < 0 ? .red : .secondary)
           .font(.callout.monospacedDigit())
-          .contentTransition(.numericText(value: Double(value)))
-          .animation(.default, value: value)
           .accessibilityLabel("accessibility.editor.button.characters-remaining")
           .accessibilityValue("\(value)")
           .accessibilityRemoveTraits(.isStaticText)
